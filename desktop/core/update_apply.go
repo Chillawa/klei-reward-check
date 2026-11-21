@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"debug/buildinfo"
 	"errors"
 	"fmt"
@@ -145,12 +144,10 @@ func applyDownloadedUpdate(root, target, payload, version string) error {
 			if p.Target == target {
 				return p.advance(root, false)
 			}
-			if _, err = os.Stat(p.Target); errors.Is(err, os.ErrNotExist) {
-				if err = p.clear(root); err != nil {
-					return err
-				}
-			} else {
-				return errors.New("另一处安装的更新尚未完成。")
+			// The foreground now identifies a different installation. Its new
+			// transaction supersedes the private staging for the previous one.
+			if err = p.clear(root); err != nil {
+				return err
 			}
 		}
 		current, err := installedReleaseVersion(target)
@@ -166,12 +163,17 @@ func applyDownloadedUpdate(root, target, payload, version string) error {
 			return fmt.Errorf("无法写入助手所在目录：%w", err)
 		}
 		p = pendingDesktopUpdate{target, stage, version}
-		if err = stageUpdatePayload(payload, p.payload()); err == nil {
-			var actual string
-			actual, err = installedReleaseVersion(p.payload())
-			if err == nil && actual != version {
-				err = errors.New("更新包中的程序版本不符。")
+		if err = stageUpdatePayload(payload, p.payload()); err == nil && runtime.GOOS != "windows" {
+			var old fs.FileInfo
+			if old, err = os.Stat(target); err == nil {
+				err = os.Chmod(p.payload(), old.Mode().Perm())
 			}
+		}
+		if err == nil && runtime.GOOS != "darwin" {
+			err = p.stageNotices(payload)
+		}
+		if err == nil {
+			err = p.verifyPayload()
 		}
 		if err == nil {
 			err = writeState(filepath.Join(root, "pending-update.json"), p)
@@ -204,7 +206,30 @@ func resumePendingUpdate(root, target string) (bool, error) {
 
 var errUpdateStillBusy = errors.New("请关闭正在使用的助手窗口，更新将在可用时继续。")
 
+func (p pendingDesktopUpdate) verifyPayload() error {
+	info, err := os.Lstat(p.Stage)
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return errors.New("更新暂存目录无效。")
+	}
+	version, err := installedReleaseVersion(p.payload())
+	if err != nil {
+		return err
+	}
+	order, err := compareReleaseVersions(version, p.Version)
+	if err == nil && order != 0 {
+		err = errors.New("更新包中的程序版本不符。")
+	}
+	return err
+}
+
 func (p pendingDesktopUpdate) advance(root string, helper bool) error {
+	resolved, err := canonicalUpdateTarget(p.Target)
+	if err != nil || resolved != p.Target {
+		return errors.Join(errors.New("助手安装位置已更改。"), err, p.clear(root))
+	}
 	current, err := installedReleaseVersion(p.Target)
 	if err != nil {
 		return err
@@ -215,19 +240,10 @@ func (p pendingDesktopUpdate) advance(root string, helper bool) error {
 	}
 	if order > 0 {
 		// Recheck the staged item when resuming an interrupted update.
-		info, err := os.Lstat(p.Stage)
-		if err != nil {
-			return err
-		}
-		if !info.IsDir() {
-			return errors.New("更新暂存目录无效。")
-		}
-		version, err := installedReleaseVersion(p.payload())
-		if err != nil {
-			return err
-		}
-		if version != p.Version {
-			return errors.New("更新包中的程序版本不符。")
+		if err = p.verifyPayload(); err != nil {
+			// The active installation has been verified above. Discard broken
+			// staging so a later check can download a fresh copy.
+			return errors.Join(err, p.clear(root))
 		}
 		if err = swapUpdatePayload(p.payload(), p.Target); err != nil {
 			if !updateFileInUse(err) {
@@ -260,11 +276,18 @@ func (p pendingDesktopUpdate) advance(root string, helper bool) error {
 			return err
 		}
 	}
+	if order >= 0 && runtime.GOOS != "darwin" {
+		if err = p.replaceNotices(); err != nil {
+			return err
+		}
+	}
 	return p.clear(root)
 }
 
 func finishDownloadedUpdate(root string) error {
+	acquired := false
 	err := locked(root, "update-finish.lock", func() error {
+		acquired = true
 		deadline := time.Now().Add(10 * time.Minute)
 		for {
 			err := locked(root, "update-apply.lock", func() error {
@@ -283,60 +306,8 @@ func finishDownloadedUpdate(root string) error {
 			time.Sleep(2 * time.Second)
 		}
 	})
-	if errors.Is(err, errOperationBusy) {
+	if !acquired && errors.Is(err, errOperationBusy) {
 		return nil
 	}
 	return err
-}
-
-func handOffUpdate(root string, p pendingDesktopUpdate) error {
-	if runtime.GOOS == "darwin" {
-		// An independent LaunchAgent can safely boot out the old hourly job.
-		// Keep its definition inside the profile, so it is never auto-loaded at login.
-		id := fmt.Sprintf("com.kleirewardhelper.update.%x", sha256.Sum256([]byte(root)))
-		domain := fmt.Sprintf("gui/%d", os.Getuid())
-		job := domain + "/" + id
-		file := filepath.Join(root, "update-helper.plist")
-		exe := updateCorePath(p.Target)
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return err
-		}
-		plist := `<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict><key>Label</key><string>` + id +
-			`</string><key>ProgramArguments</key><array><string>` + xmlText(exe) + `</string><string>--finish-update</string></array>` +
-			`<key>EnvironmentVariables</key><dict><key>HOME</key><string>` + xmlText(home) +
-			`</string></dict><key>RunAtLoad</key><true/></dict></plist>`
-		// Reuse the same job and executable path on successive updates. If the
-		// user moved the app, replace the idle job's definition under our lock.
-		body, _ := os.ReadFile(file)
-		if _, err = commandResult("/bin/launchctl", "print", job); err == nil {
-			if string(body) == plist {
-				_, err = commandResult("/bin/launchctl", "kickstart", job)
-				return err
-			}
-			if _, err = commandResult("/bin/launchctl", "bootout", job); err != nil {
-				return err
-			}
-		}
-		if err = replaceFile(file, []byte(plist)); err != nil {
-			return err
-		}
-		_, err = commandResult("/bin/launchctl", "bootstrap", domain, file)
-		return err
-	}
-	// A Windows helper must run from a third path: whichever image is running
-	// is mapped, including an executable launched directly out of staging.
-	image, err := identifyWorker(updateCorePath(p.payload()))
-	if err != nil {
-		return err
-	}
-	exe, err := image.copyTo(root)
-	if err != nil {
-		return err
-	}
-	cmd := quietCommand(exec.Command(exe, "--finish-update"))
-	if err = cmd.Start(); err != nil {
-		return err
-	}
-	return cmd.Process.Release()
 }

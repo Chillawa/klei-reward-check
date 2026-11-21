@@ -22,7 +22,7 @@ LATEST = "/repos/fixture/desktop/releases/latest"
 
 
 def run(*args, env=None, cwd=None):
-    return subprocess.run(args, env=env, cwd=cwd, check=True, text=True,
+    return subprocess.run(args, env=env, cwd=cwd, check=True, encoding="utf-8",
                           stdout=subprocess.PIPE, timeout=120).stdout.strip()
 
 
@@ -149,6 +149,7 @@ def verify_registration(worker, env):
         task = run("launchctl", "print", f"gui/{os.getuid()}/{MAC_TASK}", env=env)
     elif SYSTEM == "Windows":
         task = run("powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
+                   "[Console]::OutputEncoding = [Text.UTF8Encoding]::new($false); "
                    "$sid = [Security.Principal.WindowsIdentity]::GetCurrent().User.Value; "
                    "$task = Get-ScheduledTask -TaskName ('KleiRewardHelper-' + $sid) -ErrorAction Stop; "
                    "if ($task.State -eq 'Disabled') { exit 1 }; $task.Actions.Execute; $task.Actions.Arguments", env=env)
@@ -173,6 +174,26 @@ def run_scheduled_worker(worker, root, env):
         run(worker, "--run", env=env)
 
 
+def open_fixture(exe, root, env, scheduled):
+    if SYSTEM != "Windows" or scheduled:
+        return json.loads(run(exe, "--open-status", env=env))
+
+    # Windows keeps the real executable mapped for the lifetime of a panel.
+    # Starting a suspended instance exercises that OS restriction on headless runners.
+    create_suspended = 0x00000004
+    with subprocess.Popen([exe, "--version"], env=env, creationflags=create_suspended) as old:
+        try:
+            view = json.loads(run(exe, "--open-status", env=env))
+            wait_for("Windows did not hand off the pending update while the executable was in use",
+                     lambda: (root / "update-finish.lock").exists())
+            require((root / "pending-update.json").is_file() and
+                    run(exe, "--version", env=env) == FIXTURE_VERSION, "Mapped executable lost its pending upgrade")
+            return view
+        finally:
+            old.terminate()
+            old.wait(timeout=30)
+
+
 def verify_upgrade(work, template, server, expected, version, scheduled):
     home = work / "profile"
     home.mkdir(parents=True)
@@ -188,7 +209,7 @@ def verify_upgrade(work, template, server, expected, version, scheduled):
     exe = core(installed)
     server.available = not scheduled
     try:
-        view = json.loads(run(exe, "--open-status", env=env))
+        view = open_fixture(exe, root, env, scheduled)
         require(view["saved"] and view["enabled"] == scheduled, "Old fixture could not read preferences/session")
         if scheduled:
             old = active_worker(root)
@@ -204,6 +225,7 @@ def verify_upgrade(work, template, server, expected, version, scheduled):
             run_scheduled_worker(old, root, env)
         wait_for("Original install path never acquired the published binary",
                  lambda: exe.exists() and digest(exe) == expected)
+        wait_for("Upgrade did not finish its pending transaction", lambda: not (root / "pending-update.json").exists())
         require(run(exe, "--version", env=env) == version, "Updated client returned a wrong version")
         if SYSTEM == "Darwin":
             app = next(installed.glob("*.app"))
