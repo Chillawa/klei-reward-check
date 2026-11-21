@@ -1,0 +1,114 @@
+name: Publish desktop downloads
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+permissions: {}
+
+concurrency:
+  group: desktop-downloads-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: macos-latest
+    outputs:
+      product_version: ${{ steps.version.outputs.product }}
+      file_version: ${{ steps.version.outputs.file }}
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Read the desktop release version
+        id: version
+        run: |
+          product=$(plutil -extract CFBundleShortVersionString raw desktop/macos/Info.plist)
+          build=$(plutil -extract CFBundleVersion raw desktop/macos/Info.plist)
+          echo "product=$product" >> "$GITHUB_OUTPUT"
+          case "$product" in *.*.*) numeric=$product ;; *) numeric=$product.0 ;; esac
+          echo "file=$numeric.$build" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: desktop/core/go.mod
+          cache-dependency-path: desktop/core/go.sum
+      - name: Check the desktop client
+        working-directory: desktop/core
+        run: go vet ./...
+      - name: Build desktop archives
+        env:
+          KLEI_PUBLIC_FEED_URL: ${{ vars.KLEI_PUBLIC_FEED_URL }}
+        run: sh scripts/package-desktop.sh all
+      - name: Check the six downloads
+        run: |
+          for platform in macOS Windows Linux; do
+            for arch in arm64 x64; do
+              unzip -tq "build/releases/Klei-Points-Auto-Claim-$platform-$arch.zip"
+            done
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-archives
+          path: build/releases/Klei-Points-Auto-Claim-*.zip
+          if-no-files-found: error
+          compression-level: 0
+
+  smoke:
+    needs: build
+    strategy:
+      matrix:
+        include:
+          - { runner: windows-latest, platform: Windows, program: klei-points-auto-claim.exe }
+          - { runner: ubuntu-latest, platform: Linux, program: klei-points-auto-claim }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-archives
+      - name: Start the packaged client on its target OS
+        shell: bash
+        run: |
+          unzip -q "Klei-Points-Auto-Claim-${{ matrix.platform }}-x64.zip"
+          test "$(./${{ matrix.program }} --version)" = "${{ needs.build.outputs.product_version }}"
+          "./${{ matrix.program }}" --status > status.json
+          jq -e '.enabled == false and .saved == false' status.json
+      - name: Check both Windows executables match the Mac release
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          PRODUCT_VERSION: ${{ needs.build.outputs.product_version }}
+          FILE_VERSION: ${{ needs.build.outputs.file_version }}
+        run: |
+          foreach ($arch in 'x64', 'arm64') {
+            Expand-Archive "Klei-Points-Auto-Claim-Windows-$arch.zip" -DestinationPath $arch
+            $info = (Get-Item "$arch/klei-points-auto-claim.exe").VersionInfo
+            if ($info.ProductName -ne 'Klei Points Auto-Claim' -or $info.ProductVersion -ne $env:PRODUCT_VERSION -or $info.FileVersion -ne $env:FILE_VERSION) {
+              throw "$arch has product $($info.ProductName), version $($info.ProductVersion), file version $($info.FileVersion)"
+            }
+          }
+
+  release:
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    needs: smoke
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-archives
+          path: build/releases
+      - name: Publish archives to the version's release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+          fi
