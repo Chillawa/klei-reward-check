@@ -21,7 +21,14 @@ func dispatch(args []string) error {
 		return err
 	}
 	if len(args) == 0 {
-		return showPanel(root)
+		err := showPanel(root)
+		if runtime.GOOS == "windows" {
+			// A long-lived panel can hold the .exe past the helper's retry window.
+			if target, e := os.Executable(); e == nil {
+				_, _ = resumePendingUpdate(root, target)
+			}
+		}
+		return err
 	}
 	switch args[0] {
 	case "--self-check":
@@ -46,7 +53,20 @@ func dispatch(args []string) error {
 		}
 		return json.NewEncoder(os.Stdout).Encode(s)
 	case "--run":
-		return runWorker(root)
+		rewardErr := runWorker(root)
+		if p, err := readPreferences(root); err == nil && p.Enabled {
+			return errors.Join(rewardErr, checkReleaseUpdate(root, false))
+		}
+		return rewardErr
+	case "--apply-update":
+		if err := rememberUpdateTarget(root); err != nil {
+			return err
+		}
+		return checkReleaseUpdate(root, true)
+	case "--check-updates":
+		return checkReleaseUpdate(root, false)
+	case "--finish-update":
+		return finishDownloadedUpdate(root)
 	case "--action":
 		if len(args) == 3 && (args[2] == "0" || args[2] == "1") {
 			return updateSettings(root, args[1], args[2] == "1")

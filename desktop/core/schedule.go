@@ -163,7 +163,17 @@ func macSchedule(dir, exe string, enable bool) error {
 		return err
 	}
 	if loaded {
-		if _, err = commandResult("/bin/launchctl", "bootout", target); err != nil {
+		// Replacing a loaded job can stop it immediately. Both panel-driven
+		// migrations and automatic updates let outstanding claims finish first.
+		root, err := appDataDir()
+		if err != nil {
+			return err
+		}
+		err = locked(filepath.Dir(stateFile(root, "automatic.json")), "background.lock", func() error {
+			_, e := commandResult("/bin/launchctl", "bootout", target)
+			return e
+		})
+		if err != nil {
 			return err
 		}
 	}

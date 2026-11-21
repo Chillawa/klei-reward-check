@@ -16,4 +16,6 @@ The app checks for free Klei Points links every hour, claims the points, and sen
 | Windows 10 or 11 | Double-click `klei-points-auto-claim.exe`. Requires curl and a browser (Edge, Chrome, or Chromium). |
 | Linux desktop | Run `./klei-points-auto-claim` in the extracted folder. Requires curl, systemd user services, and a browser (Edge, Chrome, or Chromium). |
 
+If you use v1.0, download and open the latest version once. From v1.1 onward, the app updates when you open it or during automatic reward checks while the window is closed. Keep it in a folder your account can write to.
+
 The code is licensed under the [MIT License](LICENSE). The [points icon](desktop/core/ui/ICON-NOTICE.txt) belongs to Klei Entertainment.

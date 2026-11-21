@@ -16,4 +16,6 @@
 | Windows 10 / 11 | 双击 `klei-points-auto-claim.exe`。需要 curl 和 Edge、Chrome 或 Chromium。 |
 | Linux 桌面 | 在解压目录运行 `./klei-points-auto-claim`。需要 curl、systemd 用户服务和 Edge、Chrome 或 Chromium。 |
 
+v1.0 用户请手动下载并打开一次新版。从 v1.1 起，打开软件时会自动更新；开着自动领取，关窗口也会在后台更新。请把软件放在你的账户有写入权限的位置。
+
 代码采用 [MIT 许可](LICENSE)。[点数图标](desktop/core/ui/ICON-NOTICE.txt)版权归 Klei Entertainment。

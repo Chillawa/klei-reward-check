@@ -93,6 +93,7 @@ func ensureCurrentWorker(root string, schedule func(string, bool) error) error {
 
 func openStatus(root string) (overview, error) {
 	err := ensureCurrentWorker(root, applySchedule)
+	startPanelUpdate(root)
 	view, readErr := currentStatus(root)
 	if readErr != nil {
 		return view, readErr

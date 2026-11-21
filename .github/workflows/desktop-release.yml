@@ -30,6 +30,7 @@ jobs:
           product=$(plutil -extract CFBundleShortVersionString raw desktop/macos/Info.plist)
           build=$(plutil -extract CFBundleVersion raw desktop/macos/Info.plist)
           echo "product=$product" >> "$GITHUB_OUTPUT"
+          if [ "$GITHUB_REF_TYPE" = tag ]; then test "$GITHUB_REF_NAME" = "v$product"; fi
           case "$product" in *.*.*) numeric=$product ;; *) numeric=$product.0 ;; esac
           echo "file=$numeric.$build" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-go@v6
@@ -45,6 +46,7 @@ jobs:
         run: sh scripts/package-desktop.sh all
       - name: Check the six downloads
         run: |
+          (cd build/releases && shasum -a 256 -c SHA256SUMS)
           for platform in macOS Windows Linux; do
             for arch in arm64 x64; do
               unzip -tq "build/releases/Klei-Points-Auto-Claim-$platform-$arch.zip"
@@ -53,29 +55,49 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: desktop-archives
-          path: build/releases/Klei-Points-Auto-Claim-*.zip
+          path: |
+            build/releases/Klei-Points-Auto-Claim-*.zip
+            build/releases/SHA256SUMS
           if-no-files-found: error
           compression-level: 0
 
-  smoke:
+  upgrade:
     needs: build
+    permissions:
+      contents: read
     strategy:
+      fail-fast: false
       matrix:
-        include:
-          - { runner: windows-latest, platform: Windows, program: klei-points-auto-claim.exe }
-          - { runner: ubuntu-latest, platform: Linux, program: klei-points-auto-claim }
+        runner: [macos-latest, windows-latest, ubuntu-latest]
     runs-on: ${{ matrix.runner }}
     steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: desktop/core/go.mod
+          cache-dependency-path: desktop/core/go.sum
       - uses: actions/download-artifact@v4
         with:
           name: desktop-archives
-      - name: Start the packaged client on its target OS
+          path: build/releases
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Start the Linux user service manager
+        if: runner.os == 'Linux'
         shell: bash
         run: |
-          unzip -q "Klei-Points-Auto-Claim-${{ matrix.platform }}-x64.zip"
-          test "$(./${{ matrix.program }} --version)" = "${{ needs.build.outputs.product_version }}"
-          "./${{ matrix.program }}" --status > status.json
-          jq -e '.enabled == false and .saved == false' status.json
+          uid=$(id -u)
+          sudo loginctl enable-linger "$(id -un)"
+          sudo systemctl start "user@$uid.service"
+          echo "XDG_RUNTIME_DIR=/run/user/$uid" >> "$GITHUB_ENV"
+          echo "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$uid/bus" >> "$GITHUB_ENV"
+      - name: Upgrade an installed client and the registered worker
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: python .github/scripts/verify-desktop-update.py build/releases --verify-schedule
       - name: Check both Windows executables match the Mac release
         if: runner.os == 'Windows'
         shell: pwsh
@@ -84,7 +106,7 @@ jobs:
           FILE_VERSION: ${{ needs.build.outputs.file_version }}
         run: |
           foreach ($arch in 'x64', 'arm64') {
-            Expand-Archive "Klei-Points-Auto-Claim-Windows-$arch.zip" -DestinationPath $arch
+            Expand-Archive "build/releases/Klei-Points-Auto-Claim-Windows-$arch.zip" -DestinationPath $arch
             $info = (Get-Item "$arch/klei-points-auto-claim.exe").VersionInfo
             if ($info.ProductName -ne 'Klei Points Auto-Claim' -or $info.ProductVersion -ne $env:PRODUCT_VERSION -or $info.FileVersion -ne $env:FILE_VERSION) {
               throw "$arch has product $($info.ProductName), version $($info.ProductVersion), file version $($info.FileVersion)"
@@ -93,7 +115,7 @@ jobs:
 
   release:
     if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
-    needs: smoke
+    needs: upgrade
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -108,7 +130,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
-            gh release upload "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip --clobber
+            gh release upload "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip build/releases/SHA256SUMS --clobber
           else
-            gh release create "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
+            gh release create "$GITHUB_REF_NAME" build/releases/Klei-Points-Auto-Claim-*.zip build/releases/SHA256SUMS --verify-tag --generate-notes --title "$GITHUB_REF_NAME"
           fi

@@ -97,3 +97,15 @@ for system_target in $platforms; do
         build_desktop "$system_target" "$architecture"
     done
 done
+if [ "${1:-all}" = all ] && [ "${2:-both}" = both ]; then
+    (
+        cd "$out"
+        for system in macOS Windows Linux; do
+            for arch in arm64 x64; do
+                archive="Klei-Points-Auto-Claim-$system-$arch.zip"
+                shasum -a 256 "$archive"
+            done
+        done
+    ) > "$stage/SHA256SUMS"
+    mv -f "$stage/SHA256SUMS" "$out/SHA256SUMS"
+fi
