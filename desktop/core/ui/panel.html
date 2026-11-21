@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title data-i18n>Klei 点数自动领</title>
+<link rel="icon" type="image/png" href="klei-points.png">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f6f6f6; --surface: #fff; --text: #222; --muted: #626262;
+  --line: #dedede; --control: #aaa; --hover: #f3f3f3; --button: #303030; --button-text: #fff;
+  font: 16px/1.5 "Segoe UI", "Microsoft YaHei UI", "PingFang SC", system-ui, sans-serif;
+  color: var(--text); background: var(--page);
+}
+* { box-sizing: border-box }
+body, h1, h2, p, ul { margin: 0 }
+main { width: min(100% - 32px, 520px); margin: clamp(20px, 6vh, 56px) auto; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px }
+header { margin-bottom: 20px }
+h1 { font-size: 1.2rem; font-weight: 650 }
+h2 { font-size: .95rem; font-weight: 600 }
+section + section, #message + section { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--line) }
+.row, .balance-line, .receipt, .gift-row { display: flex; align-items: center }
+.row, .receipt { justify-content: space-between; gap: 12px }
+.balance-line { flex-wrap: wrap; gap: 10px; margin: 4px 0 }
+.coin { width: 40px; height: 40px; object-fit: contain }
+#balance { font-size: clamp(1.75rem, 8vw, 3rem); font-weight: 620; line-height: 1.18; letter-spacing: -.035em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; max-width: 100% }
+#balance.long { font-size: clamp(1.25rem, 5vw, 1.8rem) }
+#as-of, #empty-history, time { font-size: .85rem; color: var(--muted) }
+#as-of { margin-top: 6px }
+button, input { font: inherit }
+button { color: var(--text); cursor: pointer }
+button:focus-visible, input:focus-visible { outline: 2px solid Highlight; outline-offset: 3px }
+button:disabled, input:disabled { opacity: .55; cursor: default }
+button:not(:disabled):hover { background: var(--hover) }
+.control { border: 1px solid var(--control); border-radius: 6px; padding: 4px 12px; min-height: 30px; background: var(--surface); font-size: .85rem }
+.control.primary { color: var(--button-text); background: var(--button); border-color: var(--button) }
+.control.primary:not(:disabled):hover { background: var(--text) }
+#appearance { flex: 0 0 32px; height: 32px; padding: 0; border: 0; border-radius: 50%; background: transparent; display: grid; place-items: center; color: var(--muted) }
+#appearance:not(:disabled):hover { background: var(--hover); color: var(--text) }
+#appearance::before { content: ""; width: 17px; height: 17px; border-radius: 50%; box-shadow: inset 5px -3px currentColor; transform: rotate(-14deg) }
+#message { white-space: pre-line; overflow-wrap: anywhere; font-size: .88rem; margin-top: 14px }
+#message:empty, [hidden] { display: none !important }
+ul { list-style: none; padding: 0 }
+.receipt { font-variant-numeric: tabular-nums; padding: 7px 0; border-bottom: 1px solid var(--line) }
+.receipt:last-child { border: 0; padding-bottom: 0 }
+.amount { font-size: .94rem; font-weight: 600 }
+.amount small { font-size: .8rem; font-weight: 400 }
+#empty-history { margin-top: 8px }
+.actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 6px }
+.gift-row { position: relative; gap: 4px; margin-top: 12px; font-size: .88rem }
+label { display: inline-flex; align-items: center; gap: 6px }
+input { accent-color: var(--button); margin: 0; width: 15px; height: 15px }
+#gift-help { border: 0; border-radius: 4px; background: transparent; color: var(--muted); width: 28px; height: 26px; padding: 0 }
+#gift-help::before { content: "?"; display: inline-block; border: 1px solid currentColor; border-radius: 50%; width: 15px; height: 15px; font: 600 11px/15px system-ui }
+#gift-tip { position: absolute; bottom: calc(100% + 4px); left: 0; max-width: 22rem; padding: 9px 12px; border: 1px solid var(--control); border-radius: 6px; background: var(--surface); font-size: .85rem }
+:root[data-appearance="dark"] { color-scheme: dark; --page: #191919; --surface: #242424; --text: #f3f3f3; --muted: #b8b8b8; --line: #444; --control: #777; --hover: #353535; --button: #ddd; --button-text: #151515 }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-appearance="light"]):not([data-appearance="dark"]) { color-scheme: dark; --page: #191919; --surface: #242424; --text: #f3f3f3; --muted: #b8b8b8; --line: #444; --control: #777; --hover: #353535; --button: #ddd; --button-text: #151515 }
+}
+@media (max-width: 450px) {
+  :root { background: var(--surface) }
+  main { width: 100%; margin: 0; padding: 22px 18px; border: 0; border-radius: 0 }
+  .actions { max-width: 56% }
+}
+</style>
+</head>
+<body>
+<main>
+  <header class="row">
+    <h1 data-i18n>Klei 点数自动领</h1>
+    <button type="button" id="appearance" aria-label="切换到深色模式"></button>
+  </header>
+  <section aria-labelledby="balance-title">
+    <div class="row"><h2 id="balance-title" data-i18n>点数余额</h2><button class="control" type="button" id="refresh-balance" aria-label="刷新余额" hidden data-i18n>刷新</button></div>
+    <p class="balance-line"><img class="coin" src="klei-points.png" width="40" height="40" alt=""><strong id="balance">—</strong></p>
+    <p id="as-of" data-i18n>正在读取余额…</p>
+  </section>
+  <p id="message" role="status"></p>
+  <section aria-labelledby="automatic-title">
+    <form>
+      <div class="row">
+        <h2 id="automatic-title" data-i18n>自动领取</h2>
+        <div class="actions">
+          <button class="control" id="toggle" type="submit" disabled data-i18n>登录并开启</button>
+          <button class="control" id="stop" type="button" hidden data-i18n>停止</button>
+        </div>
+      </div>
+      <div class="gift-row">
+        <label><input type="checkbox" aria-describedby="gift-tip" disabled><span data-i18n>同时领取神秘礼物</span></label>
+        <span class="gift-help">
+          <button id="gift-help" type="button" aria-label="神秘礼物说明" aria-describedby="gift-tip"></button>
+          <span id="gift-tip" role="tooltip" hidden data-i18n>也领取 Klei 官方公告、通讯和活动图片中未标明种类的隐藏奖励。</span>
+        </span>
+      </div>
+    </form>
+  </section>
+  <section aria-labelledby="history-title">
+    <h2 id="history-title" data-i18n>最近到账</h2>
+    <p id="empty-history" data-i18n>暂无到账记录</p>
+    <ul id="receipts"></ul>
+  </section>
+</main>
+<script id="translations" type="application/json">{}</script>
+<script>
+const root = document.documentElement;
+const translations = JSON.parse(document.getElementById('translations').textContent);
+function tr(key, value) {
+  const label = Object.hasOwn(translations, key) ? translations[key] : key;
+  return value === undefined ? label : label.replace('{0}', () => value);
+}
+for (const element of document.querySelectorAll('[data-i18n]')) element.textContent = tr(element.textContent);
+for (const element of document.querySelectorAll('[aria-label]')) element.setAttribute('aria-label', tr(element.getAttribute('aria-label')));
+
+const form = document.querySelector('form');
+const button = document.getElementById('toggle');
+const stopButton = document.getElementById('stop');
+const gifts = form.querySelector('input');
+const giftHelp = document.getElementById('gift-help');
+const giftTip = document.getElementById('gift-tip');
+const helpArea = giftHelp.parentElement;
+const message = document.getElementById('message');
+const balanceButton = document.getElementById('refresh-balance');
+const appearanceButton = document.getElementById('appearance');
+const systemDark = matchMedia('(prefers-color-scheme: dark)');
+const amountFormat = new Intl.NumberFormat(root.lang);
+const dateFormat = new Intl.DateTimeFormat(root.lang, {
+  year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+});
+const receiptDateFormat = new Intl.DateTimeFormat(root.lang, {year: 'numeric', month: '2-digit', day: '2-digit', timeZone: 'UTC'});
+let state;
+let busy = false;
+let revision = 0;
+let helpPinned = false;
+
+function darkAppearance() {
+  return root.dataset.appearance === 'dark' || (root.dataset.appearance !== 'light' && systemDark.matches);
+}
+function labelAppearance() {
+  const label = tr(darkAppearance() ? '切换到浅色模式' : '切换到深色模式');
+  appearanceButton.setAttribute('aria-label', label);
+  appearanceButton.title = label;
+}
+appearanceButton.onclick = async event => {
+  const previous = root.dataset.appearance || 'system';
+  const theme = event.altKey ? 'system' : darkAppearance() ? 'light' : 'dark';
+  root.dataset.appearance = theme;
+  labelAppearance();
+  appearanceButton.disabled = true;
+  try {
+    const response = await fetch('appearance', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({theme})});
+    if (!response.ok) throw Error();
+  } catch {
+    root.dataset.appearance = previous;
+    labelAppearance();
+    message.textContent = tr('无法保存外观设置。');
+  } finally {
+    appearanceButton.disabled = false;
+  }
+};
+systemDark.addEventListener('change', labelAppearance);
+labelAppearance();
+
+const noticePrefixes = Object.keys(translations).filter(key => key.endsWith('：'));
+const noticeTemplates = Object.keys(translations).filter(key => key.includes('{0}')).map(key => {
+  const [prefix, suffix] = key.split('{0}');
+  return {key, prefix, suffix};
+});
+function noticeLine(line) {
+  if (Object.hasOwn(translations, line)) return tr(line);
+  const credited = /^已到账 (\d+) 点。$/.exec(line);
+  if (credited) return tr('已到账 {0} 点。', amountFormat.format(BigInt(credited[1])));
+  const prefix = noticePrefixes.find(key => line.startsWith(key));
+  if (prefix) return tr(prefix) + noticeLine(line.slice(prefix.length).trimStart());
+  for (const {key, prefix, suffix} of noticeTemplates) {
+    if (line.startsWith(prefix) && line.endsWith(suffix) && line.length > prefix.length + suffix.length) {
+      return tr(key, line.slice(prefix.length, line.length - suffix.length));
+    }
+  }
+  const stop = line.indexOf('。') + 1;
+  if (stop && stop < line.length) {
+    return noticeLine(line.slice(0, stop)) + (root.lang === 'en' ? ' ' : '') + noticeLine(line.slice(stop));
+  }
+  return line;
+}
+function noticeText(value) {
+  return (value || '').split(/\r?\n/).map(noticeLine).join('\n');
+}
+
+function dismissGiftHelp() {
+  helpPinned = false;
+  giftTip.hidden = true;
+}
+helpArea.onpointerenter = event => { if (event.pointerType !== 'touch') giftTip.hidden = false; };
+helpArea.onpointerleave = () => {
+  if (!helpPinned && document.activeElement !== giftHelp) giftTip.hidden = true;
+};
+giftHelp.onfocus = () => { giftTip.hidden = false; };
+giftHelp.onblur = dismissGiftHelp;
+giftHelp.onclick = () => {
+  helpPinned = !helpPinned;
+  giftTip.hidden = !helpPinned;
+};
+document.addEventListener('keydown', event => { if (event.key === 'Escape') dismissGiftHelp(); });
+document.addEventListener('pointerdown', event => { if (!helpArea.contains(event.target)) dismissGiftHelp(); });
+
+function showReceipts(rows) {
+  const list = document.getElementById('receipts');
+  list.replaceChildren();
+  document.getElementById('empty-history').hidden = rows.length > 0;
+  for (const row of rows) {
+    const item = document.createElement('li');
+    item.className = 'receipt';
+    const fields = /^(\d{4}-\d{2}-\d{2})\s+\+(\d+) 点$/.exec(row);
+    if (fields) {
+      const date = document.createElement('time');
+      date.dateTime = fields[1];
+      const day = new Date(fields[1] + 'T00:00:00Z');
+      date.textContent = Number.isNaN(day.getTime()) ? fields[1] : receiptDateFormat.format(day);
+      const amount = document.createElement('strong');
+      amount.className = 'amount';
+      amount.textContent = '+' + amountFormat.format(BigInt(fields[2]));
+      const unit = document.createElement('small');
+      unit.textContent = tr('点');
+      amount.append(' ', unit);
+      item.append(date, amount);
+    } else {
+      item.textContent = noticeText(row);
+    }
+    list.append(item);
+  }
+}
+
+async function refresh(errorMessage) {
+  const request = ++revision;
+  const response = await fetch('status', {cache: 'no-store'}).catch(() => {
+    throw Error('无法读取助手状态。');
+  });
+  if (!response.ok) throw Error('无法读取助手状态。');
+  const update = await response.json();
+  if (request !== revision) return;
+  state = update;
+  button.textContent = tr(state.login_needed ? '重新登录' : state.enabled ? '停止' :
+    state.saved ? '开启' : '登录并开启');
+  stopButton.hidden = !(state.login_needed && state.enabled);
+  button.disabled = false;
+  stopButton.disabled = false;
+  gifts.disabled = false;
+  gifts.checked = state.include_gifts;
+  button.classList.toggle('primary', !state.enabled || state.login_needed);
+  const hasPoints = state.saved && Number.isInteger(state.points);
+  const balance = document.getElementById('balance');
+  balance.textContent = hasPoints ? amountFormat.format(state.points) : '—';
+  balance.classList.toggle('long', balance.textContent.length > 12);
+  const stamp = state.points_at || state.last;
+  document.getElementById('as-of').textContent = hasPoints && stamp > 0
+    ? tr('更新于 {0}', dateFormat.format(new Date(stamp * 1000)))
+    : tr(state.login_needed ? '请重新登录以更新余额' : state.saved ? '等待读取余额' : '登录后可查看余额');
+  balanceButton.hidden = !state.saved;
+  balanceButton.disabled = state.login_needed;
+  message.textContent = noticeText(errorMessage || state.notice);
+  showReceipts(state.receipts || []);
+}
+
+function retry(error) {
+  message.textContent = noticeText(error.message);
+  state = undefined;
+  button.textContent = tr('重试');
+  button.disabled = false;
+  gifts.disabled = stopButton.disabled = balanceButton.disabled = true;
+}
+
+async function act(action) {
+  if (busy) return;
+  busy = true;
+  revision++;
+  button.disabled = stopButton.disabled = gifts.disabled = balanceButton.disabled = true;
+  try {
+    if (action === 'balance') message.textContent = tr('正在刷新余额…');
+    if (action === 'login' || (action === 'start' && !state.saved)) message.textContent = tr('正在打开登录窗口…');
+    const response = await fetch('action', {method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action, gifts: gifts.checked})}).catch(() => { throw Error('操作失败，请重试。'); });
+    if (!response.ok) throw Error('操作失败，请重试。');
+    const result = await response.json();
+    await refresh(result.error);
+  } catch (error) {
+    retry(error);
+  } finally {
+    busy = false;
+  }
+}
+
+form.onsubmit = event => {
+  event.preventDefault();
+  if (state) act(state.login_needed ? 'login' : state.enabled ? 'stop' : 'start');
+  else refresh().catch(retry);
+};
+balanceButton.onclick = () => act('balance');
+gifts.onchange = () => act('gifts');
+stopButton.onclick = () => act('stop');
+refresh().catch(retry);
+setInterval(() => { if (!busy) refresh().catch(retry); }, 30000);
+</script>
+</body>
+</html>

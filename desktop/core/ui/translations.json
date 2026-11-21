@@ -1,0 +1,382 @@
+{
+  "Klei 点数自动领": {
+    "en": "Klei Points Auto-Claim",
+    "zh-Hant": "Klei 點數自動領"
+  },
+  "刷新": {
+    "en": "Refresh",
+    "zh-Hant": "重新整理"
+  },
+  "刷新余额": {
+    "en": "Refresh balance",
+    "zh-Hant": "重新整理餘額"
+  },
+  "正在读取余额…": {
+    "en": "Loading balance…",
+    "zh-Hant": "正在讀取餘額…"
+  },
+  "点数余额": {
+    "en": "Points balance",
+    "zh-Hant": "點數餘額"
+  },
+  "更新于": {
+    "en": "Updated",
+    "zh-Hant": "更新於"
+  },
+  "请重新登录以更新余额": {
+    "en": "Sign in again to update your balance",
+    "zh-Hant": "請重新登入以更新餘額"
+  },
+  "等待读取余额": {
+    "en": "Waiting for balance",
+    "zh-Hant": "等候讀取餘額"
+  },
+  "登录后可查看余额": {
+    "en": "Sign in to see your balance",
+    "zh-Hant": "登入後可查看餘額"
+  },
+  "登录并开启": {
+    "en": "Sign in and enable",
+    "zh-Hant": "登入並開啟"
+  },
+  "同时领取神秘礼物": {
+    "en": "Also claim mystery gifts",
+    "zh-Hant": "同時領取神秘禮物"
+  },
+  "停止": {
+    "en": "Stop",
+    "zh-Hant": "停止"
+  },
+  "神秘礼物说明": {
+    "en": "About mystery gifts",
+    "zh-Hant": "神秘禮物說明"
+  },
+  "也领取 Klei 官方公告、通讯和活动图片中未标明种类的隐藏奖励。": {
+    "en": "Include hidden rewards of unspecified type in Klei announcements, newsletters, and event images.",
+    "zh-Hant": "也領取 Klei 官方公告、電子報和活動圖片中未標明種類的隱藏獎勵。"
+  },
+  "自动领取": {
+    "en": "Automatic claims",
+    "zh-Hant": "自動領取"
+  },
+  "最近到账": {
+    "en": "Recent credits",
+    "zh-Hant": "最近入帳"
+  },
+  "重新登录": {
+    "en": "Sign in again",
+    "zh-Hant": "重新登入"
+  },
+  "开启": {
+    "en": "Enable",
+    "zh-Hant": "開啟"
+  },
+  "暂无到账记录": {
+    "en": "No credits yet",
+    "zh-Hant": "尚無入帳紀錄"
+  },
+  "点": {
+    "en": "points",
+    "zh-Hant": "點"
+  },
+  "重试": {
+    "en": "Retry",
+    "zh-Hant": "重試"
+  },
+  "正在刷新余额…": {
+    "en": "Refreshing balance…",
+    "zh-Hant": "正在重新整理餘額…"
+  },
+  "正在打开登录窗口…": {
+    "en": "Opening sign-in window…",
+    "zh-Hant": "正在開啟登入視窗…"
+  },
+  "操作失败，请重试。": {
+    "en": "Couldn’t complete the action. Try again.",
+    "zh-Hant": "操作失敗，請重試。"
+  },
+  "无法读取助手状态。": {
+    "en": "Couldn’t load the app status.",
+    "zh-Hant": "無法讀取助手狀態。"
+  },
+  "切换到浅色模式": {
+    "en": "Switch to light mode",
+    "zh-Hant": "切換到淺色模式"
+  },
+  "无法保存外观设置。": {
+    "en": "Couldn’t save the appearance setting.",
+    "zh-Hant": "無法儲存外觀設定。"
+  },
+  "关闭登录窗口": {
+    "en": "Close sign-in window",
+    "zh-Hant": "關閉登入視窗"
+  },
+  "编辑": {
+    "en": "Edit",
+    "zh-Hant": "編輯"
+  },
+  "剪切": {
+    "en": "Cut",
+    "zh-Hant": "剪下"
+  },
+  "复制": {
+    "en": "Copy",
+    "zh-Hant": "複製"
+  },
+  "粘贴": {
+    "en": "Paste",
+    "zh-Hant": "貼上"
+  },
+  "全选": {
+    "en": "Select All",
+    "zh-Hant": "全選"
+  },
+  "返回": {
+    "en": "Back",
+    "zh-Hant": "返回"
+  },
+  "正在打开登录页…": {
+    "en": "Opening sign-in page…",
+    "zh-Hant": "正在開啟登入頁…"
+  },
+  "登录网站返回了无法显示的内容。": {
+    "en": "The sign-in site returned content that couldn’t be displayed.",
+    "zh-Hant": "登入網站傳回無法顯示的內容。"
+  },
+  "无法连接登录网站。": {
+    "en": "Couldn’t reach the sign-in site.",
+    "zh-Hant": "無法連線到登入網站。"
+  },
+  "登录页已中断。": {
+    "en": "The sign-in page was interrupted.",
+    "zh-Hant": "登入頁面已中斷。"
+  },
+  "登录页未能显示。": {
+    "en": "The sign-in page couldn’t be displayed.",
+    "zh-Hant": "無法顯示登入頁面。"
+  },
+  "连接登录网站用时较长。": {
+    "en": "The sign-in site is taking longer to respond.",
+    "zh-Hant": "登入網站的回應時間較長。"
+  },
+  "无法读取本次登录结果。": {
+    "en": "Couldn’t read the sign-in result.",
+    "zh-Hant": "無法讀取這次登入的結果。"
+  },
+  "等待登录页面超时。": {
+    "en": "The sign-in page timed out.",
+    "zh-Hant": "等候登入頁面逾時。"
+  },
+  "请从 Klei 点数自动领打开登录窗口。": {
+    "en": "Open sign-in from Klei Points Auto-Claim.",
+    "zh-Hant": "請從 Klei 點數自動領開啟登入視窗。"
+  },
+  "请重新登录 Klei。": {
+    "en": "Sign in to Klei again.",
+    "zh-Hant": "請重新登入 Klei。"
+  },
+  "等待到账确认。": {
+    "en": "Waiting for credit confirmation.",
+    "zh-Hant": "等候確認入帳。"
+  },
+  "请使用原来的 Klei 账户核对到账。": {
+    "en": "Use the original Klei account to confirm the credit.",
+    "zh-Hant": "請使用原來的 Klei 帳戶核對入帳。"
+  },
+  "暂时无法核对 Klei 账户记录。": {
+    "en": "Couldn’t verify the Klei account history.",
+    "zh-Hant": "暫時無法核對 Klei 帳戶紀錄。"
+  },
+  "无法读取本机领取记录。": {
+    "en": "Couldn’t read the local claim history.",
+    "zh-Hant": "無法讀取本機領取紀錄。"
+  },
+  "无法连接 Klei。": {
+    "en": "Couldn’t connect to Klei.",
+    "zh-Hant": "無法連線到 Klei。"
+  },
+  "无法保存 Klei 登录状态。": {
+    "en": "Couldn’t save the Klei session.",
+    "zh-Hant": "無法儲存 Klei 登入狀態。"
+  },
+  "Klei 登录文件格式无效。": {
+    "en": "The Klei session file is invalid.",
+    "zh-Hant": "Klei 登入檔案的格式無效。"
+  },
+  "已领取神秘礼物。": {
+    "en": "Mystery gift claimed.",
+    "zh-Hant": "已領取神秘禮物。"
+  },
+  "奖励码无效。": {
+    "en": "Invalid reward code.",
+    "zh-Hant": "獎勵碼無效。"
+  },
+  "未知操作。": {
+    "en": "Unknown action.",
+    "zh-Hant": "未知操作。"
+  },
+  "设置已更改，请重新确认。": {
+    "en": "Settings changed. Check them again.",
+    "zh-Hant": "設定已變更，請重新確認。"
+  },
+  "登录窗口已关闭。": {
+    "en": "Sign-in window closed.",
+    "zh-Hant": "登入視窗已關閉。"
+  },
+  "无法读取本次 Klei 登录。": {
+    "en": "Couldn’t read this Klei sign-in.",
+    "zh-Hant": "無法讀取這次 Klei 登入。"
+  },
+  "没有收到可保存的 Klei 登录，请重试。": {
+    "en": "No Klei session was received. Try signing in again.",
+    "zh-Hant": "未收到可儲存的 Klei 登入狀態，請重試。"
+  },
+  "浏览器未提供登录窗口。": {
+    "en": "The browser didn’t open a sign-in window.",
+    "zh-Hant": "瀏覽器未提供登入視窗。"
+  },
+  "浏览器登录窗口端口无效。": {
+    "en": "The browser sign-in port is invalid.",
+    "zh-Hant": "瀏覽器登入視窗連接埠無效。"
+  },
+  "请安装 Edge、Chrome 或 Chromium 后重新登录。": {
+    "en": "Install Edge, Chrome, or Chromium, then sign in again.",
+    "zh-Hant": "請安裝 Edge、Chrome 或 Chromium 後重新登入。"
+  },
+  "无法创建独立的登录窗口。": {
+    "en": "Couldn’t create a sign-in window.",
+    "zh-Hant": "無法建立獨立的登入視窗。"
+  },
+  "无法打开浏览器登录窗口。": {
+    "en": "Couldn’t open the browser sign-in window.",
+    "zh-Hant": "無法開啟瀏覽器登入視窗。"
+  },
+  "等待登录超时。": {
+    "en": "Sign-in timed out.",
+    "zh-Hant": "等候登入逾時。"
+  },
+  "无法连接独立的登录窗口。": {
+    "en": "Couldn’t connect to the sign-in window.",
+    "zh-Hant": "無法連線到獨立的登入視窗。"
+  },
+  "请打开 Klei 点数自动领重新登录。": {
+    "en": "Open Klei Points Auto-Claim to sign in again.",
+    "zh-Hant": "請開啟 Klei 點數自動領重新登入。"
+  },
+  "另一次操作正在进行，请稍后再试。": {
+    "en": "Another action is in progress. Try again shortly.",
+    "zh-Hant": "另一個操作正在進行，請稍後再試。"
+  },
+  "另一次操作正在进行。": {
+    "en": "Another action is in progress.",
+    "zh-Hant": "另一個操作正在進行。"
+  },
+  "助手数据目录权限异常。": {
+    "en": "Couldn’t access the app’s data folder.",
+    "zh-Hant": "無法存取助手的資料夾。"
+  },
+  "助手设置文件无效。": {
+    "en": "The settings file is invalid.",
+    "zh-Hant": "助手設定檔案無效。"
+  },
+  "奖励来源配置过大。": {
+    "en": "The reward source configuration is too large.",
+    "zh-Hant": "獎勵來源設定過大。"
+  },
+  "助手已更新，请重新打开。": {
+    "en": "The app was updated. Open it again.",
+    "zh-Hant": "助手已更新，請重新開啟。"
+  },
+  "无法更改 Windows 计划任务：": {
+    "en": "Couldn’t update the Windows scheduled task: ",
+    "zh-Hant": "無法變更 Windows 排定的工作："
+  },
+  "无法打开默认浏览器：": {
+    "en": "Couldn’t open the default browser: ",
+    "zh-Hant": "無法開啟預設瀏覽器："
+  },
+  "无法打开系统设置。": {
+    "en": "Couldn’t open system settings.",
+    "zh-Hant": "無法開啟系統設定。"
+  },
+  "切换到深色模式": {
+    "en": "Switch to dark mode",
+    "zh-Hant": "切換到深色模式"
+  },
+  "更新于 {0}": {
+    "en": "Updated {0}",
+    "zh-Hant": "更新於 {0}"
+  },
+  "+{0} 点": {
+    "en": "+{0} points",
+    "zh-Hant": "+{0} 點"
+  },
+  "已到账 {0} 点。": {
+    "en": "{0} points credited.",
+    "zh-Hant": "已入帳 {0} 點。"
+  },
+  "登录网站返回了错误（HTTP {0}）。": {
+    "en": "The sign-in site returned HTTP {0}.",
+    "zh-Hant": "登入網站傳回錯誤（HTTP {0}）。"
+  },
+  "账户页面没有可用于独立会话的 Klei Cookie。": {
+    "en": "The account page did not provide a reusable Klei session.",
+    "zh-Hant": "帳戶頁面沒有可供獨立工作階段使用的 Klei Cookie。"
+  },
+  "Steam 登录按钮的画面为空白。": {
+    "en": "The Steam sign-in button is blank.",
+    "zh-Hant": "Steam 登入按鈕的畫面是空白的。"
+  },
+  "无法检查登录按钮的实际画面。": {
+    "en": "The sign-in button could not be inspected.",
+    "zh-Hant": "無法檢查登入按鈕的實際畫面。"
+  },
+  "登录网页显示区域过小。": {
+    "en": "The sign-in page is too small.",
+    "zh-Hant": "登入網頁的顯示區域太小。"
+  },
+  "登录页显示区域过小或被遮挡。": {
+    "en": "The sign-in page is too small or obscured.",
+    "zh-Hant": "登入頁面的顯示區域太小或被遮住。"
+  },
+  "离线 Cookie 筛选未通过。": {
+    "en": "The offline cookie check failed.",
+    "zh-Hant": "離線 Cookie 篩選未通過。"
+  },
+  "离线窗口测试需要 macOS 12 或更高版本。": {
+    "en": "The offline window test requires macOS 12 or later.",
+    "zh-Hant": "離線視窗測試需要 macOS 12 或更新版本。"
+  },
+  "网页上的 Steam 登录按钮不可点击。": {
+    "en": "The Steam sign-in button cannot be clicked.",
+    "zh-Hant": "無法點擊網頁上的 Steam 登入按鈕。"
+  },
+  "隐藏的登录按钮被误判为可见。": {
+    "en": "A hidden sign-in button appeared visible during the check.",
+    "zh-Hant": "隱藏的登入按鈕被誤判為可見。"
+  },
+  "隐藏的账号 ID 检查未通过。": {
+    "en": "The hidden account ID check failed.",
+    "zh-Hant": "隱藏的帳號 ID 檢查未通過。"
+  },
+  "登录窗口状态 {0}": {
+    "en": "Sign-in window returned status {0}.",
+    "zh-Hant": "登入視窗狀態 {0}"
+  },
+  "浏览器命令失败 ({0})": {
+    "en": "Browser command failed ({0}).",
+    "zh-Hant": "瀏覽器指令失敗 ({0})"
+  },
+  "无法移除临时登录目录 {0}。": {
+    "en": "Could not remove the temporary sign-in directory {0}.",
+    "zh-Hant": "無法移除暫存登入目錄 {0}。"
+  },
+  "无法更改 Windows 计划任务：{0}": {
+    "en": "Could not change the Windows scheduled task: {0}",
+    "zh-Hant": "無法變更 Windows 排程工作：{0}"
+  },
+  "无法打开默认浏览器：{0}": {
+    "en": "Could not open the default browser: {0}",
+    "zh-Hant": "無法開啟預設瀏覽器：{0}"
+  }
+}

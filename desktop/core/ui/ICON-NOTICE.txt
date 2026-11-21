@@ -1,0 +1,9 @@
+The Klei Points icon is artwork by Klei Entertainment.
+Source: https://accounts.klei.com/assets/images/ic-pts.png
+Klei's account stylesheet maps KLEI_POINTS to this image:
+https://accounts.klei.com/assets/css/styles.css
+
+The original icon and its PNG, ICNS and Windows resource renditions are
+excluded from the project's MIT license. This helper is an independent
+fan-made project. Klei's Player Creation Guidelines cover fan projects:
+https://support.klei.com/hc/en-us/articles/360029880791-Player-Creation-Guidelines

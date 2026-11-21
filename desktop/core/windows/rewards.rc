@@ -1,0 +1,28 @@
+LANGUAGE 9, 1
+1 ICON "rewards.ico"
+
+1 VERSIONINFO
+FILEVERSION PRODUCT_VERSION_NUM,BUILD_NUMBER
+PRODUCTVERSION PRODUCT_VERSION_NUM,0
+FILEFLAGSMASK 0x3fL
+FILEFLAGS 0
+FILEOS 0x40004L
+FILETYPE 1
+FILESUBTYPE 0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "Klei Points Auto-Claim\0"
+            VALUE "FileVersion", FILE_VERSION_TEXT
+            VALUE "OriginalFilename", "klei-points-auto-claim.exe\0"
+            VALUE "ProductName", "Klei Points Auto-Claim\0"
+            VALUE "ProductVersion", PRODUCT_VERSION_TEXT
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x0409, 1200
+    END
+END
